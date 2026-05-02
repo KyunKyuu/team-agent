@@ -1,0 +1,19 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git :*)",
+      "Bash(go build :*)",
+      "Bash(go vet :*)",
+      "Bash(go test :*)",
+      "Bash(go mod :*)",
+      "Bash(go run :*)",
+      "Bash(mkdir :*)",
+      "Bash(ls :*)",
+      "Bash(cat :*)",
+      "Bash(touch :*)"
+    ]
+  }
+}

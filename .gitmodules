@@ -1,0 +1,49 @@
+# =============================================================================
+# Git Submodules — JR Agent Template
+# =============================================================================
+#
+# Cara pakai:
+#   1. Ganti URL di tiap entry dengan repo yang sesuai
+#   2. Ganti nama submodule (bagian dalam kurung siku) kalau perlu
+#   3. Jalankan: git submodule update --init --recursive
+#
+# Untuk tambah service baru (rebuild):
+#   Copy blok "rebuild-*" terakhir, ganti nama + path + url
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# LEGACY REFERENCE — source code lama sebagai acuan doc-reader
+# Path ini dibaca oleh doc-reader untuk extract contract + entity
+# SUBMODULE_ROOT = legacy/  (default di /jr-init dan /jr-resume)
+# -----------------------------------------------------------------------------
+
+[submodule "legacy-wp"]
+    path = legacy/apps/be/jr-web-partner
+    url  = https://github.com/your-org/jr-web-partner.git
+    branch = main
+
+[submodule "legacy-ext"]
+    path = legacy/apps/be/jr-external
+    url  = https://github.com/your-org/jr-external.git
+    branch = main
+
+# -----------------------------------------------------------------------------
+# REBUILD SERVICES — service Go baru hasil rebuild
+# Satu entry per service. BASE_PATH di /jr-init = path di sini.
+#
+# Fresh boilerplate  → clone repo boilerplate kosong ke path ini dulu
+# Existing service   → repo yang sudah ada kodenya
+# -----------------------------------------------------------------------------
+
+[submodule "rebuild-otp-general"]
+    path = apps/be/rebuild-general/otp-general
+    url  = https://github.com/your-org/otp-general.git
+    branch = main
+
+# Tambahkan service berikutnya dengan pola yang sama:
+#
+# [submodule "rebuild-{service-name}"]
+#     path = apps/be/rebuild-general/{service-name}
+#     url  = https://github.com/your-org/{service-name}.git
+#     branch = main

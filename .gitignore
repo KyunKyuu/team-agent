@@ -1,0 +1,12 @@
+# Claude session state — lokal only
+.claude/session/
+.claude/worktrees/
+
+# Go build artifacts
+*/bin/
+*.exe
+
+# Environment files
+*.env
+.env.*
+!.env.example
