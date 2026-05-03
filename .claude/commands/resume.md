@@ -71,7 +71,7 @@ Step 5b: Verify source folders exist.
 Question: "Path ke project yang sudah ada?"
 Header: "Base Path"
 Options:
-  - "apps/{LANGUAGE}/{PROJECT_NAME}/" (pre-filled)
+  - "services/{PROJECT_NAME}/" (pre-filled)
   - "Other"
 ```
 

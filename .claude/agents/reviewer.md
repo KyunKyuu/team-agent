@@ -19,7 +19,7 @@ tools:
 
 ```
 SERVICE_NAME  = e.g., "otp-general"
-BASE_PATH     = e.g., "apps/be/rebuild-general/otp-general/"
+BASE_PATH     = e.g., "services/otp-general/"
 OUTPUT_PATH   = "{BASE_PATH}docs/"
 TASK_TITLE    = title of the task just implemented
 TASK_FILE     = exact file path that was created/modified

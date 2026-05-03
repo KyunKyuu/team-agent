@@ -1,5 +1,5 @@
 # =============================================================================
-# Git Submodules — JR Agent Template
+# Git Submodules — Multi-Project Agent Template
 # =============================================================================
 #
 # Cara pakai:
@@ -7,43 +7,49 @@
 #   2. Ganti nama submodule (bagian dalam kurung siku) kalau perlu
 #   3. Jalankan: git submodule update --init --recursive
 #
-# Untuk tambah service baru (rebuild):
-#   Copy blok "rebuild-*" terakhir, ganti nama + path + url
+# Untuk tambah legacy source atau service baru:
+#   Copy blok yang sesuai, ganti nama + path + url
 #
 # =============================================================================
 
 # -----------------------------------------------------------------------------
 # LEGACY REFERENCE — source code lama sebagai acuan doc-reader
-# Path ini dibaca oleh doc-reader untuk extract contract + entity
-# SUBMODULE_ROOT = legacy/  (default di /jr-init dan /jr-resume)
+# Path: legacy/{source-name}/
+# SOURCE_A_PATH / SOURCE_B_PATH di /init dan /resume mengarah ke sini
 # -----------------------------------------------------------------------------
 
-[submodule "legacy-wp"]
-    path = legacy/apps/be/jr-web-partner
-    url  = https://github.com/your-org/jr-web-partner.git
-    branch = main
+# [submodule "legacy-{source-a-name}"]
+#     path = legacy/{source-a-name}
+#     url  = https://github.com/your-org/{source-a-name}.git
+#     branch = main
 
-[submodule "legacy-ext"]
-    path = legacy/apps/be/jr-external
-    url  = https://github.com/your-org/jr-external.git
-    branch = main
+# [submodule "legacy-{source-b-name}"]
+#     path = legacy/{source-b-name}
+#     url  = https://github.com/your-org/{source-b-name}.git
+#     branch = main
+
+# Contoh:
+# [submodule "legacy-web-partner"]
+#     path = legacy/web-partner
+#     url  = https://github.com/your-org/web-partner.git
+#     branch = main
 
 # -----------------------------------------------------------------------------
-# REBUILD SERVICES — service Go baru hasil rebuild
-# Satu entry per service. BASE_PATH di /jr-init = path di sini.
+# SERVICES — service hasil rebuild / project baru
+# Path: services/{service-name}/
+# BASE_PATH di /init dan /resume mengarah ke sini
 #
 # Fresh boilerplate  → clone repo boilerplate kosong ke path ini dulu
 # Existing service   → repo yang sudah ada kodenya
 # -----------------------------------------------------------------------------
 
-[submodule "rebuild-otp-general"]
-    path = apps/be/rebuild-general/otp-general
-    url  = https://github.com/your-org/otp-general.git
-    branch = main
-
-# Tambahkan service berikutnya dengan pola yang sama:
-#
-# [submodule "rebuild-{service-name}"]
-#     path = apps/be/rebuild-general/{service-name}
+# [submodule "{service-name}"]
+#     path = services/{service-name}
 #     url  = https://github.com/your-org/{service-name}.git
+#     branch = main
+
+# Contoh:
+# [submodule "otp-service"]
+#     path = services/otp-service
+#     url  = https://github.com/your-org/otp-service.git
 #     branch = main

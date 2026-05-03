@@ -22,7 +22,7 @@ tools:
 SERVICE_NAME     = e.g., "otp-general"
 WP_LEGACY_PATH   = "{SUBMODULE_ROOT}apps/be/jr-web-partner/"
 EXT_LEGACY_PATH  = "{SUBMODULE_ROOT}apps/be/jr-external/"
-BASE_PATH        = e.g., "apps/be/rebuild-general/otp-general/"
+BASE_PATH        = e.g., "services/otp-general/"
 BOILERPLATE      = same as BASE_PATH
 PLAN_PATH        = e.g., "docs/project/plan/E05-otp/"
 WP_DOCS_PATH     = "{PLAN_PATH}02-jr-web-partner/"

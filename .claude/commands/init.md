@@ -133,7 +133,7 @@ Jika MISSING → tampilkan error dan minta user perbaiki path.
 Question: "Path ke target project (tempat kode baru akan ditulis)?"
 Header: "Base Path"
 Options:
-  - "apps/{LANGUAGE}/{PROJECT_NAME}/" (pre-filled)
+  - "services/{PROJECT_NAME}/" (pre-filled)
   - "Other"
 ```
 

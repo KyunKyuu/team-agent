@@ -84,7 +84,7 @@ Jalankan: /jr-init
 Jawab 4 pertanyaan:
   1. Nama service → "otp-general"
   2. Path folder legacy (WP + EXT source code) → "legacy/"
-  3. Path target project (boilerplate) → "apps/be/rebuild-general/otp-general/"
+  3. Path target project (boilerplate) → "services/otp-general/"
   4. Path epic plan folder → "docs/project/plan/E05-otp/"
         ↓
 Sistem jalan otomatis (planning team ~15-30 menit)
@@ -114,7 +114,7 @@ Jawab 5 pertanyaan:
   1. Nama service yang sudah ada → "otp-general"
   2. Nama fitur baru → "blacklist"
   3. Path folder legacy → "legacy/"
-  4. Path project yang sudah ada → "apps/be/rebuild-general/otp-general/"
+  4. Path project yang sudah ada → "services/otp-general/"
   5. Path epic plan folder → "docs/project/plan/E06-blacklist/"
         ↓
 (sama seperti Skenario A setelah ini)

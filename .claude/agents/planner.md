@@ -18,7 +18,7 @@ tools:
 
 ```
 SERVICE_NAME   = e.g., "otp-general"
-BASE_PATH      = e.g., "apps/be/rebuild-general/otp-general/"
+BASE_PATH      = e.g., "services/otp-general/"
 BOILERPLATE    = same as BASE_PATH
 PLAN_PATH      = e.g., "docs/project/plan/E05-otp/"
 OUTPUT_PATH    = "{BASE_PATH}docs/"

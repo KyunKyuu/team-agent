@@ -18,7 +18,7 @@ tools:
 
 ```
 SERVICE_NAME = e.g., "otp-general"
-BASE_PATH    = e.g., "apps/be/rebuild-general/otp-general/"
+BASE_PATH    = e.g., "services/otp-general/"
 OUTPUT_PATH  = "{BASE_PATH}docs/"
 REPORT_PATH  = "docs/project/reports/{EPIC}-{SERVICE_NAME}/"
 EPIC         = e.g., "E05"
