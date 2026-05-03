@@ -1,10 +1,10 @@
 ---
 name: doc-reader
 description: |
-  Read migration docs, BOTH legacy sources (WP + EXT), and boilerplate for a unified service rebuild.
-  Extracts SERVICE name, ENTITIES, API contracts per scope, and identifies Reuse/Extend/Create status.
+  Read migration docs, legacy source(s), and boilerplate for a service rebuild or feature addition.
+  Supports any language and 0–2 legacy sources. Extracts entities, API contracts, and Reuse/Extend/Create status.
   Produces contract-matrix.md, entities.md, and doc-reader-summary.md as inputs for brainstormer.
-  Trigger when: starting a new unified service implementation, before brainstorming begins.
+  Trigger when: starting planning, before brainstorming begins.
 model: sonnet
 tools:
   - Read
@@ -18,81 +18,85 @@ tools:
 ## Dynamic Parameters
 
 ```
-# User-specified (passed via jr-init prompt):
-SERVICE_NAME     = e.g., "otp-general"
-SUBMODULE_ROOT   = e.g., "legacy/"  (gitignored folder inside BASE_PATH — real legacy code)
-WP_LEGACY_PATH   = "{SUBMODULE_ROOT}apps/be/jr-web-partner/"   (derived)
-EXT_LEGACY_PATH  = "{SUBMODULE_ROOT}apps/be/jr-external/"      (derived)
-BASE_PATH        = e.g., "apps/be/rebuild-general/otp-general/"
-BOILERPLATE      = same as BASE_PATH
-PLAN_PATH        = e.g., "docs/project/plan/E05-otp/"
-WP_DOCS_PATH     = "{PLAN_PATH}02-jr-web-partner/"             (derived)
-EXT_DOCS_PATH    = "{PLAN_PATH}01-jr-external/"                (derived)
-DB_DESIGN_PATH   = "{PLAN_PATH}00-database-design/"            (derived)
-OUTPUT_PATH      = "{BASE_PATH}docs/"                          (derived)
-EPIC             = e.g., "E05"
+PROJECT_NAME   = e.g., "otp-general"
+LANGUAGE       = go | node | python | other   ← target service language
+EPIC           = e.g., "E05"
+SOURCE_COUNT   = 0 | 1 | 2                    ← number of legacy sources
+MODE           = "fresh" | "extend-existing"  ← extend = project already has code
 
-# Auto-extracted from docs (NOT user-specified):
-SERVICE     = extracted from code migration docs
-ENTITIES    = extracted from database design + code migration docs
+# If SOURCE_COUNT >= 1:
+SOURCE_A_NAME  = label for first legacy source, e.g., "web-partner"
+SOURCE_A_PATH  = path to first legacy source folder (gitignored)
+SOURCE_A_LANG  = go | node | python | other   ← language of legacy source A
+
+# If SOURCE_COUNT = 2:
+SOURCE_B_NAME  = label for second legacy source, e.g., "external"
+SOURCE_B_PATH  = path to second legacy source folder
+SOURCE_B_LANG  = go | node | python | other
+PARTITION_KEY  = field that partitions data per scope, e.g., "app_origin" or "none"
+
+BASE_PATH      = target project path
+BOILERPLATE    = same as BASE_PATH
+PLAN_PATH      = epic plan folder
+OUTPUT_PATH    = "{BASE_PATH}docs/" or "{BASE_PATH}docs/{EPIC}-{FEATURE_NAME}/"
+
+# Derived from PLAN_PATH:
+SOURCE_A_DOCS_PATH = "{PLAN_PATH}01-{SOURCE_A_NAME}/"
+SOURCE_B_DOCS_PATH = "{PLAN_PATH}02-{SOURCE_B_NAME}/"  ← if SOURCE_COUNT = 2
+DB_DESIGN_PATH     = "{PLAN_PATH}00-database-design/"
+
+# Auto-extracted:
+ENTITIES    = extracted from migration docs + legacy code
 ```
 
 ---
 
-## Three Source Types
+## Source Types
 
-| Source | Location | Purpose |
-|--------|----------|---------|
-| **WP_LEGACY_PATH** | Node.js monolith (real code in SUBMODULE_ROOT) | Actual WP implementation — response formats, business logic, edge cases |
-| **EXT_LEGACY_PATH** | Go microservice (real code in SUBMODULE_ROOT) | Actual EXT implementation — struct tags, response formats, RPC patterns |
-| **PLAN_PATH** | Migration docs | Define scope, entities, routes, DTOs, what's in-migration |
-| **BOILERPLATE** | Target project | What already exists — drives Reuse/Extend/Create decisions |
+| Source | Purpose |
+|--------|---------|
+| **SOURCE_A_PATH / SOURCE_B_PATH** | Real legacy source code — ground truth for exact response field names, validation rules, DB queries |
+| **PLAN_PATH subfolders** | Migration docs — define scope, entities, routes in-migration |
+| **BOILERPLATE** | Target project — drives Reuse/Extend/Create decisions |
 
-**IMPORTANT:** WP_LEGACY_PATH and EXT_LEGACY_PATH are REAL source code (not docs).
-Read them to extract exact field names, JSON tags, and response formats.
-This is the ground truth for backward compatibility.
+**IMPORTANT:** Legacy source paths contain REAL code (not docs). Read actual files to extract field names.
+This is the ground truth for backward compat — any mismatch = production bug.
+
+---
+
+## How to Read Legacy Source by Language
+
+Use SOURCE_A_LANG / SOURCE_B_LANG to know what to look for:
+
+| Language | Response field names | Request validation | DB queries |
+|----------|---------------------|-------------------|------------|
+| **go** | JSON struct tags in DTO/model files | binding tags, validator | GORM queries, raw SQL |
+| **node** | response object keys in controller/handler | Joi/Zod/express-validator schemas | Sequelize/Knex/Prisma/raw SQL |
+| **python** | Pydantic model field names, response_model | Pydantic validators, FastAPI params | SQLAlchemy queries, raw SQL |
+| **php** | API Resource field keys (`toArray()`), JsonResponse keys | Form Request `rules()`, `$request->validated()` | Eloquent queries, Query Builder |
+| **other** | Look for serialization annotations or response builders | Look for validation decorators/schemas | Look for ORM or query builder usage |
 
 ---
 
 ## Phase 1: Migration Docs (define scope)
 
-Read FIRST — these define what is in scope.
+Read FIRST — these define what is in scope. Skip any `archive/` subfolder.
 
-### 1a. Database Design (shared)
+### 1a. Database Design (if SOURCE_COUNT = 2 or DB design exists)
 
-`{DB_DESIGN_PATH}01-migration-plan-merge-db.md`
-- Extract: entity names, table names, unified vs separate tables
-- Extract: which tables require app_origin filter
+`{DB_DESIGN_PATH}01-migration-plan-merge-db.md` — read if file exists
+- Extract: entity names, table names, which are shared vs separate
+- Extract: which tables require PARTITION_KEY filter (if PARTITION_KEY != "none")
 
-> Skip any `archive/` subfolder — read latest docs only.
+### 1b. Source A Docs (if SOURCE_COUNT >= 1)
 
-### 1b. WP Database Migration
+`{SOURCE_A_DOCS_PATH}01-database-migration.md` — entity structs, field types, column mappings
+`{SOURCE_A_DOCS_PATH}02-code-migration.md` — service name, entities, API routes, DTO definitions, handler patterns
 
-`{WP_DOCS_PATH}01-database-migration.md`
-- Extract: WP entity structs, GORM tags, JSON tags, column mappings
+### 1c. Source B Docs (if SOURCE_COUNT = 2)
 
-> Skip any `archive/` subfolder.
-
-### 1c. EXT Database Migration
-
-`{EXT_DOCS_PATH}01-database-migration.md`
-- Extract: EXT entity structs, GORM tags, JSON tags, column mappings
-
-> Skip any `archive/` subfolder.
-
-### 1d. WP Code Migration
-
-`{WP_DOCS_PATH}02-code-migration.md`
-- Extract: SERVICE name, ENTITIES list, API routes, WP DTO definitions, service methods, WP handler patterns
-
-> Skip any `archive/` subfolder.
-
-### 1e. EXT Code Migration
-
-`{EXT_DOCS_PATH}02-code-migration.md`
-- Extract: SERVICE name (should match WP), ENTITIES list, API routes, EXT DTO definitions, service methods, EXT handler patterns
-
-> Skip any `archive/` subfolder.
+`{SOURCE_B_DOCS_PATH}01-database-migration.md` — same as 1b for source B
+`{SOURCE_B_DOCS_PATH}02-code-migration.md` — same as 1b for source B
 
 ---
 
@@ -120,78 +124,123 @@ US-{EPIC}{N:03}: {title}
 
 ## Phase 3: Legacy Source Code (real code — read carefully)
 
-Read the actual source code to extract the real API contracts.
-These are the contracts frontend currently depends on — any mismatch = production bug.
+Skip this phase if SOURCE_COUNT = 0.
 
-### 3a. WP Legacy (Node.js monolith)
+Read actual source files to extract the real API contracts.
+Use SOURCE_A_LANG / SOURCE_B_LANG to know what patterns to look for (see language table above).
 
-Source at: `{WP_LEGACY_PATH}`
+### For each legacy source (A and B):
 
-Using the scope defined in Phase 1 (code migration doc identifies relevant files/folders), read:
-- Route definitions → extract method, path
-- Controller/handler files → extract request binding, response format
-- Validation rules (Joi, express-validator, or similar)
-- Response objects: exact field names and structure
-- DB queries: table names, columns, filters
-- Middleware chain and auth flow
-- Error response format
+Using scope from Phase 1 docs, read relevant files:
+- Route/endpoint definitions → extract method, path
+- Handler/controller files → request binding, response format
+- Validation schemas → field names, types, required rules
+- Response objects/structs → **exact field names clients receive** (this is the backward compat ground truth)
+- DB queries → table names, columns, partition/filter patterns
+- Auth middleware chain
 
-**Focus:** what does the WP client currently RECEIVE? Extract exact JSON field names.
-
-### 3b. EXT Legacy (Go microservice)
-
-Source at: `{EXT_LEGACY_PATH}`
-
-Using the scope from Phase 1:
-- Route definitions in Echo/Gin
-- Handler files → request binding, response format
-- DTO struct JSON tags → these ARE the response field names
-- Repository queries and filters
-- RPC handler patterns (routing keys, message formats)
-- Middleware chain and auth flow
-
-**Focus:** what does the EXT client currently RECEIVE? Read struct JSON tags precisely.
+**Focus:** what does the client currently RECEIVE? Extract exact response field names per source.
 
 ---
 
 ## Phase 4: Boilerplate (what already exists)
 
-Read `{BOILERPLATE}` to determine Reuse/Extend/Create for each component:
+Read `{BOILERPLATE}` to determine Reuse/Extend/Create for each component.
+Use LANGUAGE to know where to look:
 
-Check for: `internal/config/`, `pkg/errors/`, `pkg/response/`, `pkg/logger/`, `internal/middleware/`, `internal/database/`, `main.go`
+### Scan paths per language
 
-| Component | Status |
-|-----------|--------|
-| Config (godotenv) | Reuse / Extend / Create |
-| Errors (HTTPError) | Reuse / Extend / Create |
-| Response (BaseResponse) | Reuse / Extend / Create |
-| Logger (logrus) | Reuse / Extend / Create |
-| Middleware (JWT, S2S) | Reuse / Extend / Create |
-| Database (GORM) | Reuse / Extend / Create |
-| Pagination | Reuse / Extend / Create |
-| Routes | Reuse / Extend / Create |
-| main.go | Reuse / Extend / Create |
+**go** — look in:
+```
+internal/config/        ← config
+pkg/errors/             ← error handling
+pkg/response/           ← response wrapper
+pkg/logger/             ← logger
+internal/middleware/    ← auth middleware
+internal/database/      ← DB init
+internal/routes/        ← routes
+main.go                 ← entry point
+internal/entity/        ← existing entities (list all)
+internal/repository/    ← existing repositories
+internal/service/       ← existing services
+internal/handler/       ← existing handlers
+```
+
+**node** — look in:
+```
+src/config/             ← config
+src/middleware/         ← auth middleware
+src/models/             ← existing models (list all)
+src/repositories/       ← existing repositories
+src/services/           ← existing services
+src/controllers/        ← existing controllers
+src/routes/             ← routes
+app.ts / server.ts      ← entry point
+```
+
+**python** — look in:
+```
+app/core/config.py      ← config
+app/middleware/         ← auth middleware
+app/models/             ← existing models (list all)
+app/repositories/       ← existing repositories
+app/services/           ← existing services
+app/routers/            ← existing routers
+app/main.py             ← entry point
+```
+
+**php (Laravel)** — look in:
+```
+config/                 ← config files
+app/Models/             ← existing Eloquent models (list all)
+app/Repositories/       ← existing repositories
+app/Services/           ← existing services
+app/Http/Controllers/   ← existing controllers
+app/Http/Middleware/    ← auth middleware
+app/Http/Resources/     ← existing API resources
+routes/api.php          ← API routes
+```
+
+**other** — scan top-level folders and infer structure from file names.
+
+### Output per component
+
+For each component found (or not found), record status:
+
+| Component | Found at | Status |
+|-----------|----------|--------|
+| Config | {path or "not found"} | Reuse / Extend / Create |
+| Error handling | {path or "not found"} | Reuse / Extend / Create |
+| Response wrapper | {path or "not found"} | Reuse / Extend / Create |
+| Logger | {path or "not found"} | Reuse / Extend / Create |
+| Middleware (auth) | {path or "not found"} | Reuse / Extend / Create |
+| Database init | {path or "not found"} | Reuse / Extend / Create |
+| Routes/entry | {path or "not found"} | Reuse / Extend / Create |
+| Entity/Model: {name} | {path} | Reuse / Extend / Create |
+| Repository: {name} | {path} | Reuse / Extend / Create |
+| Service: {name} | {path} | Reuse / Extend / Create |
+| Handler/Controller: {name} | {path} | Reuse / Extend / Create |
+
+**If MODE = extend-existing:** list ALL existing entities/models — these are all Reuse by default.
+Only new entities from the current epic scope are Create or Extend.
 
 ---
 
 ## Phase 5: Build Contract Matrix
 
-For every endpoint found across WP and EXT legacy sources, build the matrix.
-
-### Format per endpoint row:
+For every endpoint found across all legacy sources, build the matrix.
 
 ```
 | Endpoint | Scope | Method | Request Fields | Response Fields | Conflict? |
 ```
 
 Rules:
-- If endpoint exists in WP only → mark Scope = WP, Conflict = —
-- If endpoint exists in EXT only → mark Scope = EXT, Conflict = —
-- If endpoint exists in BOTH → create TWO rows (one WP, one EXT)
-  - If field names differ → mark Conflict = ⚠️ and describe the difference
-  - If field names match → mark Conflict = ✅ compatible
+- SOURCE_COUNT = 1 → Scope = {SOURCE_A_NAME}, Conflict column = — (no conflict possible)
+- SOURCE_COUNT = 2 → if endpoint in both sources with different field names → Conflict = ⚠️
+  - If field names match → Conflict = ✅ compatible
+- SOURCE_COUNT = 0 → skip this phase, write empty contract-matrix.md
 
-**Response Fields column:** list the exact JSON field names from legacy source code
+**Response Fields:** exact field names from legacy source code — not from migration docs
 (not what the migration doc says — what the ACTUAL code returns)
 
 ---

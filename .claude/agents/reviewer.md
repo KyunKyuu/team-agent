@@ -86,21 +86,37 @@ Read:
 
 ## Stage 2: Code Quality
 
-**Run build and tests:**
+**Run build and tests** — command depends on LANGUAGE:
 
 ```bash
+# Go
 cd {BASE_PATH} && go build ./... 2>&1 | head -50
 cd {BASE_PATH} && go vet ./... 2>&1 | head -50
 cd {BASE_PATH} && go test ./test/{TASK_LAYER}/... -v -run ".*{EntityName}.*" 2>&1 | tail -30
+
+# Node.js
+cd {BASE_PATH} && npm run build 2>&1 | head -50
+cd {BASE_PATH} && npm run lint 2>&1 | head -50
+cd {BASE_PATH} && npx jest {TASK_LAYER} --verbose 2>&1 | tail -30
+
+# Python
+cd {BASE_PATH} && python -m mypy app/ 2>&1 | head -50
+cd {BASE_PATH} && python -m flake8 app/ 2>&1 | head -50
+cd {BASE_PATH} && pytest test/{TASK_LAYER}/ -v -k "{EntityName}" 2>&1 | tail -30
+
+# PHP (Laravel)
+cd {BASE_PATH} && php artisan config:clear && composer dump-autoload 2>&1 | head -20
+cd {BASE_PATH} && ./vendor/bin/phpstan analyse --level=5 2>&1 | head -50
+cd {BASE_PATH} && php artisan test --filter={EntityName} 2>&1 | tail -30
 ```
 
 **Static checks (read file):**
 - [ ] No unused imports
-- [ ] No `interface{}` or `any` — use concrete types
+- [ ] No untyped/any — use concrete types where possible
 - [ ] No business logic leaking into handler or repository
-- [ ] Consistent error message format: `"{layer}: {action}: %w"`
+- [ ] Consistent error handling pattern for {LANGUAGE}
 - [ ] No hardcoded strings that should be constants
-- [ ] No AutoMigrate call
+- [ ] No ORM auto-migration calls in production code
 
 ---
 

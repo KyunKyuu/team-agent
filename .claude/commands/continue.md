@@ -112,46 +112,69 @@ This is the parallel dispatch loop. Read it fully before starting.
 
 #### Pre-loop: Skill Path Map
 
-Sebelum dispatch apapun, gunakan mapping ini untuk resolve skill path per layer.
-Lead session inject path eksplisit ke setiap agent — bukan nama skill saja.
+Read LANGUAGE from session/current.md. Use the matching block below.
+Lead session reads each skill file and injects content into agent prompt — never pass skill name only.
 
 ```
 SKILL_ROOT = .claude/skills/
 
-Layer → Skills to inject (full path dari project root)
-─────────────────────────────────────────────────────────
-config      → .claude/skills/go/go-config.md
-              .claude/skills/core/tdd.md
+──────────────────────────────────────────────────────────────
+LANGUAGE = go
+──────────────────────────────────────────────────────────────
+config       → go/go-config.md + core/tdd.md
+entity       → go/go-entity.md + core/tdd.md
+dto          → go/go-dto.md + core/tdd.md
+repository   → go/go-repository.md + go/go-domain-interface.md + core/tdd.md
+service      → go/go-service.md + go/go-domain-interface.md + core/tdd.md
+handler-http → go/go-handler-http.md + core/tdd.md
+handler-rpc  → go/go-handler-rpc.md + core/tdd.md
+routes       → go/go-routes.md
+middleware   → go/go-middleware.md + core/tdd.md
 
-entity      → .claude/skills/go/go-entity.md
-              .claude/skills/core/tdd.md
+──────────────────────────────────────────────────────────────
+LANGUAGE = node
+──────────────────────────────────────────────────────────────
+config       → node/node-config.md + core/tdd.md
+model        → node/node-model.md + core/tdd.md
+dto          → node/node-dto.md + core/tdd.md
+repository   → node/node-repository.md + core/tdd.md
+service      → node/node-service.md + core/tdd.md
+handler      → node/node-handler.md + core/tdd.md
+routes       → node/node-routes.md
+middleware   → node/node-middleware.md + core/tdd.md
 
-dto         → .claude/skills/go/go-dto.md
-              .claude/skills/core/tdd.md
+──────────────────────────────────────────────────────────────
+LANGUAGE = python
+──────────────────────────────────────────────────────────────
+config       → python/python-config.md + core/tdd.md
+model        → python/python-model.md + core/tdd.md
+schema       → python/python-schema.md + core/tdd.md
+repository   → python/python-repository.md + core/tdd.md
+service      → python/python-service.md + core/tdd.md
+router       → python/python-router.md + core/tdd.md
+middleware   → python/python-middleware.md + core/tdd.md
 
-repository  → .claude/skills/go/go-repository.md
-              .claude/skills/go/go-domain-interface.md
-              .claude/skills/core/tdd.md
+──────────────────────────────────────────────────────────────
+LANGUAGE = php  (Laravel)
+──────────────────────────────────────────────────────────────
+config       → php/php-config.md + core/tdd.md
+model        → php/php-model.md + core/tdd.md
+resource     → php/php-resource.md + core/tdd.md
+repository   → php/php-repository.md + core/tdd.md
+service      → php/php-service.md + core/tdd.md
+controller   → php/php-controller.md + core/tdd.md
+routes       → php/php-routes.md
+middleware   → php/php-middleware.md + core/tdd.md
 
-service     → .claude/skills/go/go-service.md
-              .claude/skills/go/go-domain-interface.md
-              .claude/skills/core/tdd.md
-
-handler-http → .claude/skills/go/go-handler-http.md
-               .claude/skills/core/tdd.md
-
-handler-rpc  → .claude/skills/go/go-handler-rpc.md
-               .claude/skills/core/tdd.md
-
-routes       → .claude/skills/go/go-routes.md
-
-middleware    → .claude/skills/go/go-middleware.md
-               .claude/skills/core/tdd.md
+──────────────────────────────────────────────────────────────
+LANGUAGE = other
+──────────────────────────────────────────────────────────────
+Use core/tdd.md + core/git-workflow.md only.
+No language-specific skill files — agent uses language conventions directly.
 ```
 
-Lead session membaca setiap skill file sebelum dispatch dan inject kontennya ke prompt,
-sama seperti pre-spawn reads di jr-init. Ini memastikan agent punya knowledge yang tepat
-tanpa harus "mencari" file sendiri.
+All paths above are relative to SKILL_ROOT (`.claude/skills/`).
+If a skill file does not exist → skip it, do not error. Note the gap in session/current.md.
 
 ---
 

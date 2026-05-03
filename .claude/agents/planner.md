@@ -43,22 +43,63 @@ Produce `{OUTPUT_PATH}implementation-plan.md` — a complete, ordered list of ta
 
 ## Task Ordering Per Entity
 
-For each entity, tasks MUST follow this order (sequential within entity):
+Order depends on LANGUAGE. Use the appropriate track below.
+
+### Go
 
 ```
-1. Config & constants     → internal/config/config.go (extend if exists)
+1. Config & constants     → internal/config/config.go
 2. Entity struct          → internal/entity/{entity}.go
-3. DTO WP                 → internal/dto/{entity}_wp.go  (if WP contract differs from EXT)
-4. DTO EXT                → internal/dto/{entity}_ext.go (if EXT contract differs from WP)
-5. DTO shared             → internal/dto/{entity}.go     (if contracts are same)
+3. DTO scope-A            → internal/dto/{entity}_{scope_a}.go  (if contracts differ per scope)
+4. DTO scope-B            → internal/dto/{entity}_{scope_b}.go
+5. DTO shared             → internal/dto/{entity}.go            (if contracts are same)
 6. Repository interface   → internal/domain/repository/{entity}_repository.go
 7. Repository impl        → internal/repository/{entity}_repository.go
 8. Service interface      → internal/domain/service/{entity}_service.go
 9. Service impl           → internal/service/{entity}_service.go
-10. HTTP handler WP       → internal/handler/http/{entity}_wp_handler.go
-11. HTTP handler EXT      → internal/handler/http/{entity}_ext_handler.go
-12. RPC handler           → internal/handler/rpc/{entity}_handler.go (if RPC exists)
+10. HTTP handler          → internal/handler/http/{entity}_handler.go (one per scope if needed)
+11. RPC handler           → internal/handler/rpc/{entity}_handler.go (if RPC exists)
 ```
+
+### Node.js
+
+```
+1. Config / env           → src/config/{entity}.config.ts (or extend existing)
+2. Model                  → src/models/{entity}.model.ts
+3. DTO / schema           → src/dto/{entity}.dto.ts
+4. Repository             → src/repositories/{entity}.repository.ts
+5. Service                → src/services/{entity}.service.ts
+6. Controller/Handler     → src/controllers/{entity}.controller.ts
+7. Route                  → src/routes/{entity}.route.ts
+```
+
+### Python
+
+```
+1. Config / settings      → app/core/config.py (extend if exists)
+2. Model                  → app/models/{entity}.py
+3. Schema                 → app/schemas/{entity}.py
+4. Repository             → app/repositories/{entity}.py
+5. Service                → app/services/{entity}.py
+6. Router                 → app/routers/{entity}.py
+```
+
+### PHP (Laravel)
+
+```
+1. Config / env           → config/{entity}.php + .env entries
+2. Model                  → app/Models/{Entity}.php
+3. Form Request (input)   → app/Http/Requests/{Entity}Request.php
+4. API Resource (output)  → app/Http/Resources/{Entity}Resource.php
+5. Repository interface   → app/Repositories/Contracts/{Entity}RepositoryInterface.php
+6. Repository impl        → app/Repositories/{Entity}Repository.php
+7. Service                → app/Services/{Entity}Service.php
+8. Controller             → app/Http/Controllers/Api/{Entity}Controller.php
+9. Routes                 → routes/api.php (add entries)
+```
+
+If LANGUAGE is not listed above — derive idiomatic ordering from the language's conventions.
+Principle is always the same: data model → validation/DTO → persistence → business logic → HTTP interface.
 
 Parallelism across entities:
 - Tasks for entity A and entity B with NO shared dependencies → mark as parallel-eligible
@@ -75,25 +116,25 @@ Parallelism across entities:
 **Depends on:** Task {prev_N} (or "none" if first)
 **Parallel-eligible with:** Task {X}, Task {Y} (or "none")
 
-**File:** {exact/path/from/BASE_PATH/to/file.go}
+**File:** `{exact/path/from/BASE_PATH/to/file}`
 
-**Test first** (`{exact/path/to/test/file_test.go}`):
-```go
+**Test first** (`{exact/path/to/test/file}`):
+```
 // write this test, run it, confirm it FAILS before implementing
-func Test{EntityMethod}(t *testing.T) {
-    // actual test code here — no pseudocode
-}
+// use idiomatic test syntax for {LANGUAGE}
 ```
 
-**Implementation** (`{exact/path/to/file.go}`):
-```go
+**Implementation** (`{exact/path/to/file}`):
+```
 // actual implementation code — no pseudocode, no "// TODO"
+// use idiomatic {LANGUAGE} patterns
 ```
 
 **Verify:**
 ```bash
-go test ./internal/{layer}/... -run Test{EntityMethod} -v
-# expected: PASS
+# Go:     go test ./{test_path}/... -run {TestName} -v
+# Node:   npx jest {test_file} --verbose
+# Python: pytest {test_file} -v -k {test_name}
 ```
 
 **Commit:** `feat({SERVICE_NAME}): {description}`
