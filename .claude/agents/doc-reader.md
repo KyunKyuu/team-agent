@@ -31,6 +31,7 @@ EXT_DOCS_PATH    = "{PLAN_PATH}01-jr-external/"                (derived)
 DB_DESIGN_PATH   = "{PLAN_PATH}00-database-design/"            (derived)
 OUTPUT_PATH      = "{BASE_PATH}docs/"                          (derived)
 EPIC             = e.g., "E05"
+CONTEXT          = content of {PLAN_PATH}00-context.md (injected by jr-init, empty if not found)
 
 # Auto-extracted from docs (NOT user-specified):
 SERVICE     = extracted from code migration docs
@@ -54,9 +55,37 @@ This is the ground truth for backward compatibility.
 
 ---
 
+## Phase 0: Service Context (process FIRST — highest priority)
+
+Process the CONTEXT parameter before reading any file.
+
+**If CONTEXT is empty or "(context not provided)":**
+- Record in doc-reader-summary.md: `Context: not provided`
+- Proceed directly to Phase 1
+
+**If CONTEXT is provided, extract:**
+
+| Section | What to extract |
+|---------|----------------|
+| **Situasi** | Why this service is being built/rebuilt — the background |
+| **Yang Dibangun** | What the service must do when complete — the goal |
+| **Constraints Khusus** | Service-specific rules not in the generic template |
+| **Integrasi** | Other services involved, auth type, communication pattern |
+| **Keputusan Pre-set** | Architectural decisions already fixed — brainstormer MUST NOT revisit |
+| **Hal yang Perlu Diperhatikan** | Edge cases, gotchas, things not obvious from legacy code or epic |
+
+**Priority rules:**
+- Constraints Khusus **override** anything found in migration docs or legacy code
+- Keputusan Pre-set are **non-negotiable** — skip those brainstorming sections entirely
+- Hal yang Perlu Diperhatikan must be surfaced in doc-reader-summary.md prominently
+
+Store extracted context. Apply throughout all subsequent phases.
+
+---
+
 ## Phase 1: Migration Docs (define scope)
 
-Read FIRST — these define what is in scope.
+Read after Phase 0 — these define what is in scope.
 
 ### 1a. Database Design (shared)
 
@@ -237,12 +266,44 @@ Notes: {any edge cases or ambiguities}
 
 ### 3. `{OUTPUT_PATH}doc-reader-summary.md`
 
-Concise summary (max 400 words) for brainstormer context:
-- Service name and entity list
-- Endpoint count per scope
-- Conflict count and types
-- Boilerplate status summary
-- Any ambiguities needing user clarification
+Concise summary for brainstormer context:
+
+```markdown
+# Doc-Reader Summary — {SERVICE_NAME} ({EPIC})
+
+## Service Context
+{If CONTEXT provided: paste Situasi + Yang Dibangun sections verbatim}
+{If not provided: "Context: not provided"}
+
+## Pre-set Decisions (brainstormer skips these)
+{list from Keputusan Pre-set, or "none"}
+
+## Constraints Khusus
+{list from Constraints Khusus, or "none"}
+
+## Integrasi
+{list from Integrasi, or "none"}
+
+## Hal yang Perlu Diperhatikan
+{list from context, or "none"}
+
+## Entities
+{entity list with table names and unified/separate status}
+
+## Endpoints
+WP: {N} endpoints
+EXT: {N} endpoints
+Conflicts: {N}
+
+## Boilerplate Status
+{summary of Reuse/Extend/Create per component}
+
+## Taiga Stories
+{summary if provided, or "none provided"}
+
+## Ambiguities
+{list of anything unclear that needs user input before brainstorming}
+```
 
 ---
 

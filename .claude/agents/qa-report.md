@@ -2,8 +2,8 @@
 name: qa-report
 description: |
   Aggregate QA results into a final summary report.
-  Combines qa-verify and qa-compat results into one decision document.
-  Trigger when: both qa-verify and qa-compat have completed.
+  Combines qa-verify, qa-compat, and qa-security results into one decision document.
+  Trigger when: qa-verify, qa-compat, and qa-security have all completed.
 model: haiku
 tools:
   - Read
@@ -32,6 +32,7 @@ Read QA results and write a single summary report to `{REPORT_PATH}qa-summary-re
 
 - `{REPORT_PATH}qa-verify-report.md`
 - `{REPORT_PATH}qa-compat-report.md`
+- `{REPORT_PATH}qa-security-report.md`
 
 ---
 
@@ -46,36 +47,49 @@ Branch: feat/{SERVICE_NAME}
 
 {✅ APPROVED — Ready to merge / ❌ BLOCKED — Issues must be fixed first}
 
+| Check       | Status | Blockers |
+|-------------|--------|----------|
+| QA Verify   | ✅/❌  | {n}      |
+| QA Compat   | ✅/❌  | {n}      |
+| QA Security | ✅/❌  | {n CRITICAL/HIGH} |
+
 ## QA Verify
 
 {Overall status from qa-verify-report.md}
-
-{Paste issues table from qa-verify-report.md}
+{Paste issues table}
 
 ## QA Compat
 
 {Overall status from qa-compat-report.md}
+{Paste issues table}
 
-{Paste issues table from qa-compat-report.md}
+## QA Security
 
-## Open Issues
+{Overall status from qa-security-report.md}
 
-{List all unresolved FAIL items across both reports with priority:}
+### Security Issues (CRITICAL / HIGH — blockers)
+{Paste CRITICAL and HIGH issues from qa-security-report.md}
 
-| Priority | File | Issue | Fix |
-|----------|------|-------|-----|
-| 🔴 BLOCKER | {file:line} | {description} | {action} |
-| 🟡 MAJOR | ... | ... | ... |
+### Advisory (MEDIUM / LOW)
+{Paste MEDIUM and LOW issues — noted but do not block merge}
+
+## Open Issues (all blockers combined)
+
+| Priority | Source | File | Issue | Fix |
+|----------|--------|------|-------|-----|
+| 🔴 CRITICAL | security | {file:line} | {description} | {action} |
+| 🔴 BLOCKER  | verify   | {file:line} | {description} | {action} |
+| 🟡 MAJOR    | compat   | {file:line} | {description} | {action} |
 
 ## Next Steps
 
 {If APPROVED:}
-- Run /superpowers:finishing-a-development-branch
 - Create PR to main
-- Notify QA team
+- Share qa-security advisory items with team for backlog
 
 {If BLOCKED:}
 - Fix issues listed above (ordered by priority)
-- Re-run qa-verify and/or qa-compat as needed
-- Re-run qa-report after fixes
+- Security CRITICAL/HIGH must be fixed before any other step
+- Re-run affected QA agents after fixes
+- Re-run qa-report after all fixes
 ```

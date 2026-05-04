@@ -117,6 +117,7 @@ EXT_LEGACY_PATH  = "{SUBMODULE_ROOT}apps/be/jr-external/"
 WP_DOCS_PATH     = "{PLAN_PATH}02-jr-web-partner/"
 EXT_DOCS_PATH    = "{PLAN_PATH}01-jr-external/"
 DB_DESIGN_PATH   = "{PLAN_PATH}00-database-design/"
+CONTEXT_PATH     = "{PLAN_PATH}00-context.md"
 TAIGA_STORIES    = "{PLAN_PATH}03-taiga-stories.md"
 REPORT_PATH      = "docs/project/reports/{EPIC}-{SERVICE_NAME}/"
 TEAM_NAME        = "planning-{SERVICE_NAME}-{EPIC}"
@@ -143,6 +144,8 @@ Print summary:
 │  PLAN_PATH:       {PLAN_PATH}                        │
 │  OUTPUT_PATH:     {OUTPUT_PATH}                      │
 ├──────────────────────────────────────────────────────┤
+│  CONTEXT_PATH:    {CONTEXT_PATH}                     │
+│    → (dibaca sebelum doc-reader berjalan)            │
 │  TAIGA_STORIES:   {TAIGA_STORIES}                    │
 │    → (akan dicek saat doc-reader berjalan)           │
 ├──────────────────────────────────────────────────────┤
@@ -198,10 +201,11 @@ COMPLETED:    0
 CURRENT_TASK: (none)
 
 ## QA Team
-STATUS:    not-started
-QA_VERIFY: not-run
-QA_COMPAT: not-run
-QA_REPORT: not-run
+STATUS:      not-started
+QA_VERIFY:   not-run
+QA_COMPAT:   not-run
+QA_SECURITY: not-run
+QA_REPORT:   not-run
 
 ## Changes
 CHANGES:     0
@@ -212,6 +216,39 @@ CHANGELOG:   {OUTPUT_PATH}session/changelog.md
 ---
 
 ## Step 8a: Spawn doc-reader
+
+### Pre-spawn: Read service context
+
+Check if `{CONTEXT_PATH}` exists and read it:
+
+```bash
+ls "{CONTEXT_PATH}" 2>/dev/null && echo "EXISTS" || echo "MISSING"
+```
+
+- If EXISTS: use Read tool to read `{CONTEXT_PATH}` → store content as CONTEXT
+- If MISSING: CONTEXT = "(context not provided)"
+
+> **Format `00-context.md` yang diharapkan:**
+> ```
+> ## Situasi
+> [kenapa service ini perlu dibangun/direbuild]
+>
+> ## Yang Dibangun
+> [target state service ini setelah selesai]
+>
+> ## Constraints Khusus
+> [rules spesifik service ini — di luar constraint generik]
+>
+> ## Integrasi
+> [service lain yang terlibat, auth type, pola komunikasi]
+>
+> ## Keputusan Pre-set
+> [keputusan arsitektur yang sudah fixed — brainstormer tidak perlu tanya]
+>
+> ## Hal yang Perlu Diperhatikan
+> [edge cases, gotchas, hal tidak obvious dari legacy atau epic]
+> ```
+> File ini opsional, tapi sangat disarankan. Tanpa ini brainstormer akan menebak konteks.
 
 Spawn doc-reader to read BOTH legacy sources and extract API contracts.
 
@@ -232,6 +269,7 @@ WP_DOCS_PATH     = "{WP_DOCS_PATH}"
 EXT_DOCS_PATH    = "{EXT_DOCS_PATH}"
 DB_DESIGN_PATH   = "{DB_DESIGN_PATH}"
 EPIC             = "{EPIC}"
+CONTEXT          = "{CONTEXT}"
 
 IMPORTANT: WP_LEGACY_PATH and EXT_LEGACY_PATH are inside SUBMODULE_ROOT, which is a local-only
 reference folder (gitignored). Read them freely — they are real legacy code, not docs.
@@ -353,6 +391,8 @@ Use the Read tool to read each file and store the content:
 2. Read `{OUTPUT_PATH}contract-matrix.md` → CONTRACT_MATRIX
 3. Read `{OUTPUT_PATH}conflict-resolutions.md` → CONFLICT_RESOLUTIONS
 
+(CONTEXT already read in Step 8a — reuse the same value.)
+
 Then spawn brainstormer with the actual file contents injected:
 
 ```
@@ -367,6 +407,10 @@ BOILERPLATE     = "{BOILERPLATE}"
 PLAN_PATH       = "{PLAN_PATH}"
 OUTPUT_PATH     = "{OUTPUT_PATH}"
 EPIC            = "{EPIC}"
+
+--- 00-context.md (HIGHEST PRIORITY — constraints and pre-set decisions override all below) ---
+{CONTEXT}
+--- end ---
 
 --- doc-reader-summary.md ---
 {DOC_READER_SUMMARY}

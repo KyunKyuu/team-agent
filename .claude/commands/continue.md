@@ -47,7 +47,7 @@ Print status lalu langsung lanjut — tidak perlu konfirmasi.
 ║    {entity_A}: {status}  {entity_B}: {status}            ║
 ║    {entity_C}: {status}  ...                             ║
 ╠══════════════════════════════════════════════════════════╣
-║  QA:  verify={QA_VERIFY}  compat={QA_COMPAT}            ║
+║  QA:  verify={QA_VERIFY}  compat={QA_COMPAT}  security={QA_SECURITY} ║
 ╠══════════════════════════════════════════════════════════╣
 ║  Changes recorded: {CHANGES}                             ║
 ╚══════════════════════════════════════════════════════════╝
@@ -389,7 +389,25 @@ Agent({
 ```
 Wait. Read result. Update session/current.md: `QA_COMPAT: pass | fail`
 
-**If qa-report = not-run AND both pass:**
+**If qa-security = not-run AND qa-compat = pass:**
+```
+Agent({
+  subagent_type: "qa-security",
+  prompt: `
+  SERVICE_NAME: {SERVICE_NAME}
+  BASE_PATH: {BASE_PATH}
+  OUTPUT_PATH: {OUTPUT_PATH}
+  REPORT_PATH: {REPORT_PATH}
+  EPIC: {EPIC}
+  `
+})
+```
+Wait. Read result. Update session/current.md: `QA_SECURITY: pass | fail`
+
+If FAIL (CRITICAL or HIGH issues found) → print issues → auto-dispatch implementer to fix → re-run qa-security.
+If PASS (only MEDIUM/LOW) → continue.
+
+**If qa-report = not-run AND qa-verify + qa-compat + qa-security done:**
 ```
 Agent({
   subagent_type: "qa-report",
