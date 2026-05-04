@@ -72,7 +72,7 @@ Opsi:
 Question: "Path ke target project (boilerplate untuk service baru)?"
 Header: "Base Path"
 Options:
-  - "apps/be/rebuild-general/{SERVICE_NAME}/" (pre-filled dengan SERVICE_NAME)
+  - "services/{SERVICE_NAME}/" (pre-filled dengan SERVICE_NAME)
   - "Other" (custom path)
 MultiSelect: false
 ```
