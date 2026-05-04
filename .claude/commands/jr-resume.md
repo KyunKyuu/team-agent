@@ -89,7 +89,7 @@ Path ke project yang sudah ada (bukan boilerplate fresh — sudah ada kode di da
 Question: "Path ke project yang sudah ada?"
 Header: "Base Path"
 Options:
-  - "apps/be/rebuild-general/{SERVICE_NAME}/" (pre-filled)
+  - "services/{SERVICE_NAME}/" (pre-filled)
   - "Other" (custom path)
 MultiSelect: false
 ```

@@ -39,10 +39,10 @@ Untuk setiap service rebuild (WP + EXT → unified Go service):
 
 ### Setelah sistem ini
 
-- User hanya menjawab parameter (< 5 menit)
-- Taruh Taiga stories dari PM di satu file
-- Jalankan `/jr-init` atau `/jr-resume` + `/continue`
-- Sistem jalan otomatis sampai QA selesai
+- Tulis `00-context.md` (penjelasan situasi, constraints khusus, keputusan pre-set)
+- Taruh migration docs + Taiga stories dari PM di PLAN_PATH
+- Jawab parameter di `/jr-init` atau `/jr-resume`
+- Jalankan `/continue` — sistem jalan otomatis sampai QA selesai
 
 **Total keterlibatan user aktif: < 30 menit per service.**
 
@@ -75,16 +75,20 @@ Setiap "agent" adalah instance Claude yang di-spawn fresh dengan instruksi spesi
 ### Skenario A: Service baru (belum ada kode)
 
 ```
-[PM menulis Taiga stories]
-        ↓
-Taruh di: docs/project/plan/E05-otp/03-taiga-stories.md
+[Tech Lead siapkan PLAN_PATH]
+  docs/project/plan/E05-otp/
+    00-context.md              ← tulis situasi, constraints, keputusan pre-set
+    00-database-design/        ← schema + merge strategy
+    01-jr-web-partner/         ← migration docs WP
+    02-jr-external/            ← migration docs EXT
+    03-taiga-stories.md        ← dari PM (opsional)
         ↓
 Jalankan: /jr-init
         ↓
 Jawab 4 pertanyaan:
   1. Nama service → "otp-general"
   2. Path folder legacy (WP + EXT source code) → "legacy/"
-  3. Path target project (boilerplate) → "apps/be/rebuild-general/otp-general/"
+  3. Path target project (boilerplate) → "services/otp-general/"
   4. Path epic plan folder → "docs/project/plan/E05-otp/"
         ↓
 Sistem jalan otomatis (planning team ~15-30 menit)
@@ -114,7 +118,7 @@ Jawab 5 pertanyaan:
   1. Nama service yang sudah ada → "otp-general"
   2. Nama fitur baru → "blacklist"
   3. Path folder legacy → "legacy/"
-  4. Path project yang sudah ada → "apps/be/rebuild-general/otp-general/"
+  4. Path project yang sudah ada → "services/otp-general/"
   5. Path epic plan folder → "docs/project/plan/E06-blacklist/"
         ↓
 (sama seperti Skenario A setelah ini)
@@ -146,10 +150,12 @@ User ketik /jr-init
       ▼
 jr-init.md (command) — berjalan di lead session
   │  Kumpulkan: SERVICE_NAME, SUBMODULE_ROOT, BASE_PATH, PLAN_PATH
-  │  Derive: EPIC, OUTPUT_PATH, WP_LEGACY_PATH, EXT_LEGACY_PATH, TAIGA_STORIES
+  │  Derive: EPIC, OUTPUT_PATH, WP_LEGACY_PATH, EXT_LEGACY_PATH, CONTEXT_PATH, TAIGA_STORIES
+  │  Pre-read: {PLAN_PATH}00-context.md → CONTEXT (jika ada)
   │  Tulis: {OUTPUT_PATH}session/current.md ← state awal
   │
   ├─→ spawn Agent(doc-reader)
+  │     Phase 0: proses CONTEXT (constraints khusus, keputusan pre-set)
   │     Baca: WP legacy code + EXT legacy code + migration docs + boilerplate
   │     Tulis: contract-matrix.md, entities.md, doc-reader-summary.md
   │     Kembali ke lead session
@@ -159,8 +165,9 @@ jr-init.md (command) — berjalan di lead session
   │  [jika tidak ada conflict] → tulis conflict-resolutions.md (kosong)
   │
   ├─→ spawn Agent(brainstormer)
+  │     Baca: CONTEXT (di-inject langsung — prioritas tertinggi)
   │     Baca: doc-reader output (di-inject via prompt, bukan baca file sendiri)
-  │     Tanya clarifying questions
+  │     Tanya clarifying questions (skip section yang ada di Keputusan Pre-set)
   │     Propose 2-3 approach per section
   │     Self-review
   │     Tulis: design-decisions.md
@@ -237,9 +244,17 @@ continue.md — baca session/current.md → PHASE=development
   │
   ├── QA COMPAT
   │   └── spawn qa-compat
+  │       verifikasi JSON tags match legacy contract persis
+  │
+  ├── QA SECURITY
+  │   └── spawn qa-security
+  │       cek: auth, injection, tenant isolation, goroutine leak,
+  │            timeout, panic recovery, N+1, Redis TTL
+  │       CRITICAL/HIGH → fix dulu sebelum lanjut
+  │       MEDIUM/LOW → advisory (masuk report, tidak blokir)
   │
   ├── QA REPORT
-  │   └── spawn qa-report → tulis laporan
+  │   └── spawn qa-report → agregasi ketiga laporan → final verdict
   │
   └── Print: DONE
 ```
@@ -249,10 +264,16 @@ continue.md — baca session/current.md → PHASE=development
 Agent tidak saling bicara langsung. Mereka berkomunikasi lewat **file di disk**:
 
 ```
+00-context.md (ditulis user)
+  └──pre-read by lead──→ CONTEXT variable
+                              │
+                              ├──inject ke──→ doc-reader (Phase 0)
+                              └──inject ke──→ brainstormer (prioritas tertinggi)
+
 doc-reader
   └──writes──→ contract-matrix.md
                 entities.md
-                doc-reader-summary.md
+                doc-reader-summary.md (includes context summary)
                      │
                      └──read by──→ brainstormer (via lead injection)
                                         │
@@ -440,9 +461,10 @@ continue.md (lead session)
         (reviewer punya tools Read sendiri, baca file hasil implementasi langsung)
 
 QA phase
-  └── spawn qa-verify → qa-verify.md  (punya tools Bash, Read, Grep)
-  └── spawn qa-compat → qa-compat.md
-  └── spawn qa-report → qa-report.md  (haiku, murah — hanya agregasi)
+  └── spawn qa-verify   → qa-verify.md   (Bash, Read, Grep — build + test + pattern)
+  └── spawn qa-compat   → qa-compat.md   (Bash, Grep — JSON tags vs contract matrix)
+  └── spawn qa-security → qa-security.md (Bash, Grep — auth, injection, leak, N+1, Redis)
+  └── spawn qa-report   → qa-report.md   (haiku — agregasi 3 laporan, final verdict)
 ```
 
 Hasilnya: setiap agent menerima **persis konten yang dia butuhkan** di dalam promptnya — tidak lebih, tidak kurang. Graph tetap terjaga karena resolusi path terjadi di lead session, bukan di dalam agent yang bisa saja gagal diam-diam.
@@ -476,14 +498,15 @@ Hasilnya: spawn agent ke-2, ke-3, ke-10 jauh lebih murah dan lebih cepat dari sp
 │   └── change.md                ← /change   : handle perubahan requirement
 │
 ├── agents/                      ← Definisi subagent (dipanggil via Agent())
-│   ├── doc-reader.md            ← Baca legacy code + docs, extract contracts
+│   ├── doc-reader.md            ← Baca context + legacy code + docs, extract contracts
 │   ├── brainstormer.md          ← Desain arsitektur, 2-3 approach per section
 │   ├── planner.md               ← Tulis implementation plan dengan actual code
 │   ├── task-breaker.md          ← Generate routing map + Taiga task mapping
 │   ├── reviewer.md              ← Two-stage review: spec compliance + code quality
 │   ├── qa-verify.md             ← Build, vet, test, pattern checks
-│   ├── qa-compat.md             ← Backward compat: field names match legacy
-│   └── qa-report.md             ← Aggregate laporan QA
+│   ├── qa-compat.md             ← Backward compat: JSON tags match legacy contract
+│   ├── qa-security.md           ← Security, leak, concurrency, perf analysis
+│   └── qa-report.md             ← Aggregate 3 laporan QA → final verdict
 │
 ├── skills/
 │   ├── go/                      ← Knowledge base Go patterns (14 files)
@@ -506,15 +529,23 @@ Hasilnya: spawn agent ke-2, ke-3, ke-10 jauh lebih murah dan lebih cepat dari sp
 ### Alur Data antar File
 
 ```
-[User input]
+[User siapkan PLAN_PATH]
+  PLAN_PATH/00-context.md       ← penjelasan situasi, constraints, keputusan pre-set
+  PLAN_PATH/00-database-design/ ← schema + merge strategy
+  PLAN_PATH/01-{source-a}/      ← migration docs WP
+  PLAN_PATH/02-{source-b}/      ← migration docs EXT
+  PLAN_PATH/03-taiga-stories.md ← dari PM (opsional)
      ↓
-jr-init.md → session/current.md (state awal)
+jr-init.md → pre-read 00-context.md → CONTEXT variable
+           → session/current.md (state awal)
      ↓
-doc-reader.md → contract-matrix.md
+doc-reader.md → Phase 0: proses CONTEXT (constraints + pre-set)
+              → contract-matrix.md
                 entities.md
                 doc-reader-summary.md
      ↓
-brainstormer.md → design-decisions.md
+brainstormer.md (menerima CONTEXT + doc-reader output via injection)
+              → design-decisions.md
      ↓
 planner.md      → implementation-plan.md
      ↓
@@ -526,7 +557,7 @@ task-breaker.md → tasks-superpowers.md  ← dibaca /continue untuk routing
      → implementer baca implementation-plan.md + skill files
      → reviewer baca hasil implementasi + contract-matrix.md
      ↓
-qa-verify, qa-compat → qa-report
+qa-verify → qa-compat → qa-security → qa-report (final verdict)
 ```
 
 ---
@@ -597,6 +628,25 @@ Kalau NEEDS_FIX → implementer fix → re-review. Loop sampai APPROVED.
 2. Tidak ada field ekstra yang tidak ada di contract (strict-mode client protection)
 3. JSON tag persis sama — case-sensitive
 
+### QA Security & Reliability
+
+`qa-security` cek 10 kategori. Severity CRITICAL/HIGH memblokir merge:
+
+| Kategori | Contoh temuan | Severity |
+|----------|---------------|---------|
+| Auth & authorization | Endpoint tanpa middleware | CRITICAL |
+| Input validation & injection | Raw SQL concatenation | CRITICAL |
+| Tenant isolation (app_origin) | Query unified table tanpa filter | CRITICAL |
+| Sensitive data exposure | Password di response/log | CRITICAL |
+| Goroutine & resource leak | `go func` tanpa exit condition | HIGH |
+| Context & timeout | HTTP client tanpa timeout | HIGH |
+| Panic recovery | Handler tanpa recover middleware | HIGH |
+| Connection pool & unbounded query | SELECT tanpa LIMIT | MEDIUM |
+| N+1 query | DB call di dalam for-loop | MEDIUM |
+| Redis TTL & cache invalidation | SET tanpa expire | MEDIUM |
+
+MEDIUM/LOW dicatat sebagai advisory di laporan final — tidak blokir, tapi tim tahu.
+
 ### Cross-Session Resume
 
 Development bisa berhenti kapan saja (koneksi putus, mau istirahat, dll) dan dilanjutkan dengan `/continue`. State tersimpan di `session/current.md` — sistem tahu persis task mana yang sudah selesai, entity mana yang sedang dikerjakan.
@@ -619,7 +669,9 @@ Kalau PM minta perubahan di tengah development:
 | Waktu planning per service | 8–15 jam | ~15-30 menit (user aktif) |
 | Waktu implementation per service | varies | Otomatis, paralel |
 | Konsistensi pattern | Bergantung developer | Enforced via skill files |
+| Context arsitektur | Di kepala tech lead | `00-context.md` — explicitly documented |
 | Backward compat check | Manual / sering missed | Otomatis di QA compat |
+| Security & reliability check | Manual / ad-hoc | Otomatis di QA security (10 kategori) |
 | Resume setelah interupsi | Mulai ulang / tebak progress | `/continue` dari checkpoint |
 | Perubahan requirement | Rework besar | Impact assessment + partial re-plan |
 | Input PM | Tidak ada alur formal | Taiga stories → mapped ke impl tasks |

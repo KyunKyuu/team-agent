@@ -24,7 +24,7 @@ Use the Read tool to read `{OUTPUT_PATH}session/current.md`.
 
 If OUTPUT_PATH is unknown or file not found, ask:
 ```
-Question: "Path ke docs/ folder project? (contoh: apps/be/rebuild-general/otp-general/docs/)"
+Question: "Path ke docs/ folder project? (contoh: services/otp-general/docs/)"
 Header: "Output Path"
 Free text.
 ```

@@ -21,7 +21,7 @@ If file not found, ask:
 ```
 Question: "Path ke docs/ folder project yang mau dilanjutkan?"
 Header: "Output Path"
-Free text — e.g., "apps/be/rebuild-general/otp-general/docs/"
+Free text — e.g., "services/otp-general/docs/"
 ```
 
 Extract: SERVICE_NAME, EPIC, BASE_PATH, OUTPUT_PATH, PHASE, WORKTREE_PATH, BRANCH,
